@@ -1,6 +1,6 @@
 import { useState } from 'react';
 // import UserService from '../services/api/UserService.tsx';
-import DeskService from '../services/api/DeskService.tsx';
+import { createDesk, getUserDesks } from '../services/api/DeskService.tsx';
 import Desk from '../components/Desk';
 import Button from '../components/UI/Button.tsx';
 import AddDeskForm from '../components/AddDeskForm.tsx';
@@ -17,21 +17,21 @@ function HomePage() {
   // const dispatch = useAppDispatch();
 
   const { data: desks, isLoading, error } = useQuery({
-    queryFn: async () => await DeskService.getUserDesks(user._id),
-    queryKey: ["desks"],
+    queryFn: async () => await getUserDesks(user._id),
+    queryKey: ["desks", user._id],
     staleTime: Infinity,
   });
 
   const mutation = useMutation(
-    async (name: string) => await DeskService.createDesk(name, [user._id]),
+    async (name: string) => await createDesk(name, [user._id]),
     {
       onSuccess: () => {
-        queryClient.invalidateQueries('desks');
+        queryClient.invalidateQueries({queryKey: ['desks', user._id]});
       }
     }
   );
 
-  const createDesk = (name: string) => {
+  const onButtonCreateDesk = (name: string) => {
     mutation.mutate(name);
     setIsAddingDesk(!isAddingDesk)
   }
@@ -53,7 +53,7 @@ function HomePage() {
         return <Desk key={desk?._id} desk={desk}/>
       })}
       {!isAddingDesk && <Button className='desks__add-desk-button' callback={() => setIsAddingDesk(!isAddingDesk)} text='Добавить доску' type='button'/>}
-      {isAddingDesk && <AddDeskForm callback={createDesk}initialValue=''/>}
+      {isAddingDesk && <AddDeskForm callback={onButtonCreateDesk}initialValue=''/>}
     </div>
   );
 }

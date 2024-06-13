@@ -2,14 +2,14 @@ import { useState } from 'react';
 import moreIcon from "../assets/icons/More horiz.svg"
 import profileIcon from "../assets/icons/Profile.svg"
 import { NavLink } from 'react-router-dom';
-import { Desk } from '../services/types/types';
+import { IDesk } from '../services/types/types';
 import ModalChange from './UI/ModalChange';
 import AddDeskForm from './AddDeskForm';
-import DeskService from '../services/api/DeskService';
+import {updateDesk, deleteDesk} from '../services/api/DeskService';
 import { useMutation, useQueryClient } from 'react-query';
 
 type DeskProps = {
-  desk: Desk
+  desk: IDesk
 }
 
 function Desk({desk}: DeskProps) {
@@ -22,14 +22,14 @@ function Desk({desk}: DeskProps) {
   // console.log(desk);
 
   const mutationUpdate = useMutation(
-    async (updatedDesk: Desk) => await DeskService.updateDesk(updatedDesk),
+    async (updatedDesk: IDesk) => await updateDesk(updatedDesk),
     {
       onSuccess: () => queryClient.invalidateQueries('desks')
     }
   );
 
   const mutationDelete = useMutation(
-    async () => await DeskService.deleteDesk(desk._id),
+    async () => await deleteDesk(desk._id),
     {
       onSuccess: () => queryClient.invalidateQueries('desks')
     }

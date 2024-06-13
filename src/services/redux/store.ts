@@ -1,5 +1,6 @@
 import { combineReducers, configureStore } from '@reduxjs/toolkit'
 import userReducer from "./fiatures/userSlice.ts";
+import deskReducer from "./fiatures/deskSlice.ts";
 
 import { 
   persistStore, 
@@ -21,6 +22,7 @@ const persistConfig = {
 
 const rootReduser = combineReducers({
   user: userReducer,
+  desk: deskReducer,
 });
 
 const persistedReduser = persistReducer(persistConfig, rootReduser);

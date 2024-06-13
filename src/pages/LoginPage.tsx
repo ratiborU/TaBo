@@ -3,9 +3,10 @@ import Button from '../components/UI/Button';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useMutation, useQueryClient } from 'react-query';
 import { useForm } from 'react-hook-form';
-import AuthService from '../services/api/AuthService';
+// import AuthService from '../services/api/AuthService';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { login } from '../services/api/AuthService';
 
 import { useAppDispatch, useAppSelector } from "../services/redux/hooks";
 import { setUser, selectUser } from "../services/redux/fiatures/userSlice";
@@ -27,7 +28,7 @@ function LoginPage() {
   const navigate = useNavigate();
   const {register, handleSubmit, formState: {errors}, setError} = useForm<TLoginSchema>({resolver: zodResolver(loginSchema)});
   const loginMutation = useMutation(
-    async ({email, password}: TLoginSchema) => await AuthService.login(email, password),
+    async ({email, password}: TLoginSchema) => await login(email, password),
     {
       onSuccess: (data) => {
         dispatch(setUser(data));

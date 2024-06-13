@@ -1,18 +1,22 @@
 import { useState } from 'react';
 import moreIcon from "../assets/icons/More horiz.svg";
 import Task from './Task';
-import { ColumnWithTasks } from '../services/types/types';
-// import ButtonTask from './UI/ButtonTask';
+import { IColumnWithTasks } from '../services/types/types';
 import Button from "./UI/Button";
 import AddTaskForm from './AddTaskForm';
 import { useQueryClient, useMutation } from 'react-query';
-import { Column } from '../services/types/types';
-import ColumnService from '../services/api/ColumnService';
+import { IColumn } from '../services/types/types';
+import { deleteColumn, updateColumn } from '../services/api/ColumnService';
 import ModalChange from './UI/ModalChange';
+import { createTask } from '../services/api/TaskSerice';
+
+import { Droppable } from 'react-beautiful-dnd';
+import { useAppSelector } from '../services/redux/hooks';
+import { selectDesk } from '../services/redux/fiatures/deskSlice';
 
 
 type ColumnProps = {
-  column: ColumnWithTasks
+  column: IColumnWithTasks
 }
 
 
@@ -21,17 +25,28 @@ function Column({column}: ColumnProps) {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isChanging, setIsChanging] = useState(false);
   const [isDeleted, setIsDeleted] = useState(false);
+  // const [tasks, setTasks] = useState(column.tasks.sort((a, b) => a.position - b.position));
   const queryClient = useQueryClient();
-  
+
+  const deskRedux = useAppSelector(selectDesk);
+  // console.log(deskRedux.columns);
+  // console.log(column)
   const mutationUpdate = useMutation(
-    async (updatedColumn: Column) => await ColumnService.updateColumn(updatedColumn),
+    async (updatedColumn: IColumn) => await updateColumn(updatedColumn),
     {
       onSuccess: () => queryClient.invalidateQueries('desk')
     }
   );
 
   const mutationDelete = useMutation(
-    async () => await ColumnService.deleteColumn(column._id),
+    async () => await deleteColumn(column._id),
+    {
+      onSuccess: () => queryClient.invalidateQueries('desk')
+    }
+  );
+  
+  const mutationAddTask = useMutation(
+    async () => await createTask('task', column._id),
     {
       onSuccess: () => queryClient.invalidateQueries('desk')
     }
@@ -49,31 +64,45 @@ function Column({column}: ColumnProps) {
     document.addEventListener("click", closeModal)
   }
 
-
   const handleDeleteColumn = () => {
     mutationDelete.mutate();
     setIsDeleted(true);
   }
 
+  const handleAddTask = () => {
+    mutationAddTask.mutate();
+    setIsAddingTask(false)
+  }
+  // console.log(column.tasks);
   return (
-    <div className='column'>
-      <div className="column__title">
-        <div className="column__title-text">{column.name}</div>
-        {/* <div className="column__title-more"><img src={moreIcon} alt="" /></div> */}
-        <div className="column__title-more" onClick={handleModal}>
-            <img src={moreIcon} alt="#" />
-            {isModalVisible && <ModalChange callbackChange={() => setIsChanging(true)} callbackDelete={handleDeleteColumn}/>}
-          </div>
-      </div>
-      
-      <div className="column__tasks">
-        {column.tasks.map((x, i) => <Task key={i} task={x}/>)}
+    <Droppable droppableId={column._id}>
+    {(provided) => (
+      <div className='column'
+        {...provided.droppableProps}
+        ref={provided.innerRef}
+      >
+        <div className="column__title">
+          <div className="column__title-text">{column.name}</div>
+          {/* <div className="column__title-more"><img src={moreIcon} alt="" /></div> */}
+          <div className="column__title-more" onClick={handleModal}>
+              <img src={moreIcon} alt="#" />
+              {isModalVisible && <ModalChange callbackChange={() => setIsChanging(true)} callbackDelete={handleDeleteColumn}/>}
+            </div>
+        </div>
         
-        {!isAddingTask && <Button className="column__button" callback={() => {setIsAddingTask(true)}} text="Добавить задачу" type={"button"}/>}
-        {isAddingTask && <AddTaskForm callback={() => {setIsAddingTask(false)}} initialValue=''/>}
+        {/* че-то странное не факт что будет работать */}
+        <div className="column__tasks">
+          
+          {[...column.tasks].sort((a, b) => a.position - b.position).map((x, i) => <Task key={x._id} task={x} index={i}/>)}
+          {/* {tasks.map((x, i) => <Task key={x._id} task={x} index={i}/>)} */}
+          {provided.placeholder}
+          {!isAddingTask && <Button className="column__button" callback={() => {setIsAddingTask(true)}} text="Добавить задачу" type={"button"}/>}
+          {isAddingTask && <AddTaskForm callback={handleAddTask} initialValue=''/>}
+        </div>
       </div>
-      
-    </div>
+    )}
+    
+    </Droppable>
   );
 }
 

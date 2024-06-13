@@ -10,7 +10,8 @@ type AddTaskFormProps = {
 function AddTaskForm({callback, initialValue="",}: AddTaskFormProps) {
   const {register, handleSubmit} = useForm();
 
-  const onSubmitHandle = (data) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const onSubmitHandle = (data: any) => {
     callback(data.name);
   }
 

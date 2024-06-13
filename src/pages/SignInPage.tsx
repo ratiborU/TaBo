@@ -3,9 +3,10 @@ import Button from '../components/UI/Button';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useMutation, useQueryClient } from 'react-query';
 import { useForm } from 'react-hook-form';
-import AuthService from '../services/api/AuthService';
+// import AuthService from '../services/api/AuthService';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { registration, login } from '../services/api/AuthService';
 
 
 //перенести в другой файл
@@ -28,10 +29,10 @@ function SignInPage() {
   const queryClient = useQueryClient();
   const {register, handleSubmit, formState: {errors}, setError} = useForm<TSignUpSchema>({resolver: zodResolver(signUpSchema)});
   const signinMutation = useMutation(
-    async ({name, email, password}: TSignUpSchema) => await AuthService.registration(name, email, password),
+    async ({name, email, password}: TSignUpSchema) => await registration(name, email, password),
     {
       onSuccess: async (data) => {
-        await AuthService.login(data.email, data.password);
+        await login(data.email, data.password);
         queryClient.invalidateQueries('desks');
         navigate("/");
       },

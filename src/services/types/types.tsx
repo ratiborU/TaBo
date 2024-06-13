@@ -1,4 +1,4 @@
-export type User = {
+export type IUser = {
   _id: string,
   name: string,
   email: string,
@@ -7,21 +7,21 @@ export type User = {
   desks: string[]
 }
 
-export type Desk = {
+export type IDesk = {
   _id: string,
   name: string,
   users: string[],
   position: number
 }
 
-export type Column = {
+export type IColumn = {
   _id: string,
   name: string,
   deskId: string,
   position: number
 }
 
-export type Task = {
+export type ITask = {
   _id: string,
   name: string,
   columnId: string,
@@ -33,32 +33,33 @@ export type Task = {
   position: number
 }
 
-export type Comment = {
+export type IComment = {
   _id: string,
-  name: string,
+  user: string,
+  username: string,
   taskId: string,
   content: string,
   date: string 
 }
 
 
-export type DeskWithColumns = {
+export type IDeskWithColumns = {
   _id: string,
   name: string,
-  users: string[],
+  users: IUser[],
   position: number,
-  columns: ColumnWithTasks[]
+  columns: IColumnWithTasks[]
 }
 
-export type ColumnWithTasks = {
+export type IColumnWithTasks = {
   _id: string,
   name: string,
   deskId: string,
   position: number,
-  tasks: TaskWithComments[]
+  tasks: ITaskWithComments[]
 }
 
-export type TaskWithComments = {
+export type ITaskWithComments = {
   _id: string,
   name: string,
   columnId: string,
@@ -68,5 +69,5 @@ export type TaskWithComments = {
   files: string[],
   deadline: string,
   position: number,
-  comments: Comment[]
+  comments: IComment[]
 }
