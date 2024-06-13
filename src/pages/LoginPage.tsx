@@ -8,8 +8,8 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { login } from '../services/api/AuthService';
 
-import { useAppDispatch, useAppSelector } from "../services/redux/hooks";
-import { setUser, selectUser } from "../services/redux/fiatures/userSlice";
+import { useAppDispatch } from "../services/redux/hooks";
+import { setUser } from "../services/redux/fiatures/userSlice";
 
 
 const loginSchema = z.object({
@@ -21,7 +21,7 @@ type TLoginSchema = z.infer<typeof loginSchema>;
 
 
 function LoginPage() {
-  const user = useAppSelector(selectUser);
+  // const user = useAppSelector(selectUser);
   const dispatch = useAppDispatch();
   const queryClient = useQueryClient();
 
@@ -32,7 +32,6 @@ function LoginPage() {
     {
       onSuccess: (data) => {
         dispatch(setUser(data));
-        console.log(user); // потом убрать
         queryClient.invalidateQueries('desks');
         navigate("/");
       },

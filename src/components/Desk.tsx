@@ -1,19 +1,20 @@
 import { useState } from 'react';
 import moreIcon from "../assets/icons/More horiz.svg"
-import profileIcon from "../assets/icons/Profile.svg"
+// import profileIcon from "../assets/icons/Profile.svg"
 import { NavLink } from 'react-router-dom';
 import { IDesk } from '../services/types/types';
 import ModalChange from './UI/ModalChange';
 import AddDeskForm from './AddDeskForm';
 import {updateDesk, deleteDesk} from '../services/api/DeskService';
 import { useMutation, useQueryClient } from 'react-query';
+import UserImage from './UserImage';
 
 type DeskProps = {
   desk: IDesk
 }
 
 function Desk({desk}: DeskProps) {
-  const [users, setUsers] = useState([{image: profileIcon}, {image: profileIcon}]);
+  // const [users, setUsers] = useState([{image: profileIcon}, {image: profileIcon}]);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isChanging, setIsChanging] = useState(false);
   const [isDeleted, setIsDeleted] = useState(false);
@@ -58,9 +59,9 @@ function Desk({desk}: DeskProps) {
     setIsDeleted(true);
   }
 
-  // if (isDeleted) {
-  //   return <></>
-  // }
+  if (isDeleted) {
+    return <></>
+  }
 
   if (isChanging) {
     return <AddDeskForm callback={handleUpdateDesk} initialValue={desk.name}/>
@@ -79,7 +80,8 @@ function Desk({desk}: DeskProps) {
         </div>
 
         <div className="desk__users">
-          {users.map((user, i) => <div key={i}><img src={user.image} alt="" /></div>)}
+          {desk.users.map(user => <UserImage key={user._id} username={user.name} size='40px' fontSize='18px' className=''/>)}
+          {/* {users.map((user, i) => <div key={i}><img src={user.image} alt="" /></div>)} */}
         </div>
       </div>
     </NavLink>

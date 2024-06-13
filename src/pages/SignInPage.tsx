@@ -1,12 +1,12 @@
-// import React from 'react';
 import Button from '../components/UI/Button';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useMutation, useQueryClient } from 'react-query';
 import { useForm } from 'react-hook-form';
-// import AuthService from '../services/api/AuthService';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { registration, login } from '../services/api/AuthService';
+import { useAppDispatch } from '../services/redux/hooks';
+import { setUser } from '../services/redux/fiatures/userSlice';
 
 
 //перенести в другой файл
@@ -27,12 +27,15 @@ type TSignUpSchema = z.infer<typeof signUpSchema>;
 function SignInPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const dispatch = useAppDispatch();
+  
   const {register, handleSubmit, formState: {errors}, setError} = useForm<TSignUpSchema>({resolver: zodResolver(signUpSchema)});
   const signinMutation = useMutation(
     async ({name, email, password}: TSignUpSchema) => await registration(name, email, password),
     {
       onSuccess: async (data) => {
-        await login(data.email, data.password);
+        const responseLogin = await login(data.email, data.password);
+        dispatch(setUser(responseLogin));
         queryClient.invalidateQueries('desks');
         navigate("/");
       },

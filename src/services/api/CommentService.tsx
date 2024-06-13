@@ -33,14 +33,30 @@ export const getComments = async (): Promise<IComment[]> => {
   return response;
 }
 
-export const createComment = async (userId: string, taskId: string, content: string, date: string): Promise<IComment> => {
+export const createComment = async (userId: string, username: string, taskId: string, content: string, date: string): Promise<IComment> => {
   const response = await axios.post(`http://localhost:5000/comments`, {
     "user": userId,
-    "username": "user",
+    "username": username,
     "taskId": taskId,
     "content": content,
     "date": date
   }, {
+    headers: {
+      "Authorization": `Bearer ${window.localStorage.getItem("token")}`
+    }
+  })
+    .then((response) => {
+      return response["data"];
+    }).catch((error) => {
+      console.log(error);
+      throw new Error(error.message);
+    }); 
+  return response;
+}
+
+
+export const deleteComment = async (id: string): Promise<IComment> => {
+  const response = await axios.delete(`http://localhost:5000/comments/${id}`, {
     headers: {
       "Authorization": `Bearer ${window.localStorage.getItem("token")}`
     }

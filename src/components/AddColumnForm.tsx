@@ -7,6 +7,8 @@ type AddColumnFormProps = {
   initialValue: string
 }
 
+
+
 function AddColumnForm({callback, initialValue="",}: AddColumnFormProps) {
   const {register, handleSubmit} = useForm();
 

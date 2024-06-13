@@ -1,30 +1,24 @@
 import { useEffect, useState } from 'react';
 import Column from '../components/Column';
 import Button from '../components/UI/Button';
-import moreIcon from "../assets/icons/More horiz.svg";
-import profileIcon from "../assets/icons/Profile.svg";
 import { addUserToDesk, getFullDesk } from '../services/api/DeskService';
 import { createColumn } from '../services/api/ColumnService';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from 'react-query';
-// import { useAppSelector } from "../services/redux/hooks";
-// import { selectUser } from "../services/redux/fiatures/userSlice";
 import AddColumnForm from '../components/AddColumnForm';
 import { useQueryClient, useMutation } from 'react-query';
-// import ColumnService from '../services/api/ColumnService';
 import { DragDropContext, DropResult } from 'react-beautiful-dnd';
 import { updateTask, getTaskById } from '../services/api/TaskSerice';
 import { useAppDispatch, useAppSelector } from '../services/redux/hooks';
 import { selectUser } from '../services/redux/fiatures/userSlice';
 import UserImage from '../components/UserImage';
-import { selectDesk, setDesk } from '../services/redux/fiatures/deskSlice';
+import { setDesk } from '../services/redux/fiatures/deskSlice';
 
 
 function DeskPage() {
   const {id} = useParams();
   const [isAddingColumn, setIsAddingColumn] = useState(false);
   const user = useAppSelector(selectUser);
-  const deskRedux = useAppSelector(selectDesk);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -38,11 +32,12 @@ function DeskPage() {
     queryKey: ["desk", id],
   });
 
-  // useEffect(() => {
-  //   if (status == 'success') {
-  //     dispatch(setDesk(desk));
-  //   }
-  // }, [desk, dispatch, status])
+
+  useEffect(() => {
+    if (status == 'error') {
+      navigate("/login/login");
+    }
+  }, [navigate, status]);
 
 
   const mutation = useMutation(
@@ -61,10 +56,8 @@ function DeskPage() {
   }
 
   const onDragEnd = async (result: DropResult) => {
-    // console.log(result);
     const task = await getTaskById(result.draggableId);
     await updateTask(task._id, task.name, result.destination!.droppableId, task.description, task.users, task.result, task.deadline, result.destination!.index);
-    // console.log(response);
     queryClient.invalidateQueries({queryKey: ["desk", id]});
   }
 
@@ -82,20 +75,14 @@ function DeskPage() {
     alert('Ссылка приглашение скопированна в буфер обмена.');
   }
 
-  const onFilterButton = () => {
-    
-  }
-
   
 
   if (isLoading) {
     return <>Идет загрузка</>
   }
-
   if (error) {
     return <>Произошла ошибка</>
   }
-  // console.log()
   if (!desk?.users.map(x => x._id).includes(user._id)) {
     return (
       <div className="popup-invitation-to-desk">
@@ -115,17 +102,9 @@ function DeskPage() {
       <nav className='desk-nav'>
         <div className="desk-nav__name">{desk.name}</div>
         <div className="desk-nav__users">
-          {/* <img  src={profileIcon} alt="" /> */}
           {desk.users.map(user => <UserImage key={user._id} username={user.name} size='30px' fontSize='14px' className=''/>)}
-          {/* <img  src={profileIcon} alt="" /> */}
         </div>
-        {/* <Button className="desk-nav__button" callback={() => {}} text="Фильтры" type="button"/> */}
         <Button className="desk-nav__button" callback={onShareButton} text="Поделиться" type="button"/>
-        <div className="desk-nav__more-icon">
-          <img src={moreIcon} alt="#" />
-          
-          
-        </div>
       </nav>
 
       
@@ -133,7 +112,6 @@ function DeskPage() {
         <DragDropContext
           onDragEnd={onDragEnd}
         >
-          {/* <Column column={desk!.columns[0]}/> */}
           {desk?.columns.map(column => {
             return <Column key={column._id} column={column}/>
           })}

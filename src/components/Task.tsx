@@ -1,23 +1,22 @@
-import React, { useState } from 'react';
-import icon from "../assets/icons/Profile.svg";
+import React, { useEffect, useState } from 'react';
 import { ITaskWithComments, IUser } from '../services/types/types';
-import Button from './UI/Button';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { useMutation } from 'react-query';
-import { updateTask } from '../services/api/TaskSerice';
-// import CommentAddForm from './CommentAddForm';
-// import { getUserStiles } from '../services/utils/utils';
 
-
+import { deleteTask, updateTask } from '../services/api/TaskSerice';
+import { transformDate } from '../services/utils/utils';
 import { Draggable } from 'react-beautiful-dnd';
-import Comment from './Comment';
 import { createComment } from '../services/api/CommentService';
 import { useAppSelector } from '../services/redux/hooks';
-import { selectUser } from '../services/redux/fiatures/userSlice';
+import { selectUser} from '../services/redux/fiatures/userSlice';
 import { selectDesk } from '../services/redux/fiatures/deskSlice';
+
 import UserImage from './UserImage';
+import Comment from './Comment';
+import Button from './UI/Button';
+
 
 const taskSchema = z.object({
   title: z.string().min(1, "Это поле обязательно для заполнения"),
@@ -48,6 +47,9 @@ type TaskProps = {
   index: number
 }
 
+
+
+
 function Task({task, index}: TaskProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isAddingMember, setIsAddingMember] = useState(false);
@@ -55,16 +57,17 @@ function Task({task, index}: TaskProps) {
   const [description, setDescription]= useState(task.description);
   const user = useAppSelector(selectUser);
   const deskRedux = useAppSelector(selectDesk);
-  const date = new Date(task.deadline);
+
 
   const {register, handleSubmit, formState: {errors}, } = useForm<TTaskSchema>({resolver: zodResolver(taskSchema)});
-  const {register: registerComment, handleSubmit: handleSubmitComment, formState: {errors: errorsComments}, } = useForm<TCommentSchema>({resolver: zodResolver(commentSchema)});
+  const {register: registerComment, handleSubmit: handleSubmitComment } = useForm<TCommentSchema>({resolver: zodResolver(commentSchema)});
+
 
   const taskUpdateMutation = useMutation({
     mutationFn: async (data: TTaskSchema) => {
-      console.log(data);
+      // console.log(data);
       const dateResult = data.deadline == '' ? '' : `${data.deadline}T12:00:00Z`
-      await updateTask(task._id, data.title, task.columnId, description, [], data.result, dateResult, task.position);
+      await updateTask(task._id, data.title, task.columnId, description, users, data.result, dateResult, task.position);
     },
     onSuccess: () => {
       alert('Изменения сохранены');
@@ -74,12 +77,29 @@ function Task({task, index}: TaskProps) {
   const createCommentMutation = useMutation({
     mutationFn: async (data: TCommentSchema) => {
       const currentDate = new Date();
-      await createComment(user._id, task._id, data.content, currentDate.toISOString());
+      await createComment(user._id, user.name, task._id, data.content, currentDate.toISOString());
     },
     onSuccess: () => {
       alert('Изменения сохранены');
     }
   });
+
+  const deleteTaskMutation = useMutation({
+    mutationFn: async () => {
+      await deleteTask(task._id);
+    },
+    onSuccess: () => {
+      alert('Задача удалена');
+      onClosePopup();
+    }
+  });
+
+  useEffect(() => {
+    if (task.users) {
+      setUsers(task.users);
+    }
+    
+  }, [task]);
 
   const onSubmitForm = (data: TTaskSchema) => {
     // console.log('dataaaaaaaa');
@@ -97,9 +117,6 @@ function Task({task, index}: TaskProps) {
     setIsOpen(true);
     document.addEventListener("click", onClosePopup);
     document.body.style.overflow = 'hidden';
-    console.log(task);
-    // console.log(getUserStiles('ss'));
-    // console.log(task);
   }
 
   const onClosePopup = () => {
@@ -109,11 +126,21 @@ function Task({task, index}: TaskProps) {
     document.body.style.overflow = 'scroll'
   }
 
-  const addOrRemoveUserOnTask = (user: IUser) => {
+  
 
+  const getDeadlineDateClass = () => {
+    if (task.result) {
+      return 'task__deadline';
+    }
+    const currentDate = new Date();
+    const taskDate = new Date(task.deadline);
+    return currentDate.toISOString() < taskDate.toISOString() ? 'task__deadline': "task__deadline-pass";
+    // console.log(currentDate.toISOString() > taskDate.toISOString());
   }
 
 
+
+  // console.log(task.users);
   if (isOpen) {
     return (
       <>
@@ -131,13 +158,36 @@ function Task({task, index}: TaskProps) {
               
               <p className='task-popup__title'>Участники:</p>
               <div className="task-popup__members">
-              {task.users.map(user => <UserImage callback={() => console.log('sdsds')} key={user._id} username={user.name} size='30px' fontSize='14px' className=''/>)}
+                <p className='task-popup__members-to-choose-text'>Ответственные:</p>
+                {users.map(user => 
+                  <UserImage 
+                    callback={() => setUsers(users.filter(x => x._id != user._id))} 
+                    key={user._id} 
+                    username={user.name} 
+                    size='30px' 
+                    fontSize='14px' 
+                    className=''
+                  />
+                  )}
               </div>
               {!isAddingMember && <Button className='task-popup__button task-popup__button_mb' callback={() => setIsAddingMember(true)} text='Добавить участника' type='button'/>}
               {isAddingMember && 
               <div className='task-popup__members-to-choose'>
-                {deskRedux.users.map(user => <UserImage callback={() => console.log('sdsds')} key={user._id} username={user.name} size='30px' fontSize='14px' className=''/>)}
+                <p className='task-popup__members-to-choose-text'>Выбрать:</p>
+                {deskRedux.users.map(user => 
+                !users.find(x => x._id == user._id) && 
+                <UserImage 
+                  callback={() => {
+                    setUsers([...users, user])
+                  }} 
+                  key={user._id} 
+                  username={user.name} 
+                  size='30px' 
+                  fontSize='14px' 
+                  className=''
+                />)}
               </div>}
+              {isAddingMember && <Button className='task-popup__button task-popup__button_mb' callback={() => setIsAddingMember(false)} text='Скрыть' type='button'/>}
 
               <p className='task-popup__title'>Результат:</p>
               <input {...register('result')} className='task-popup__input' type="text" placeholder='Результат задачи...' defaultValue={task.result} form="taskForm"/>
@@ -166,7 +216,7 @@ function Task({task, index}: TaskProps) {
               
               <div className="task-popup__save-buttons">
                 <button className='task-popup__button' type='submit' form='taskForm'>Сохранить</button>
-                <Button className='task-popup__button-delete' callback={() => {}} text='Удалить' type='button'/>
+                <Button className='task-popup__button-delete' callback={() => deleteTaskMutation.mutate()} text='Удалить' type='button'/>
               </div>
             </div>
 
@@ -178,35 +228,6 @@ function Task({task, index}: TaskProps) {
     )
   }
 
-
-  // const dragStartHandler = (e: React.DragEvent<HTMLDivElement>) => {
-
-  // }
-
-  // const dragEndHandler = (e: React.DragEvent<HTMLDivElement>) => {
-  //   e.preventDefault();
-  //   if (e.target.className == 'task') {
-  //     e.target.style.opacity = '100%'
-  //   }
-  // }
-
-  // const dragOverHandler = (e: React.DragEvent<HTMLDivElement>) => {
-  //   e.preventDefault();
-  //   if (e.target.className == 'task') {
-  //     e.target.style.opacity = '50%'
-  //   }
-  // }
-
-  // const dragLeaveHandler = (e: React.DragEvent<HTMLDivElement>) => {
-  //   e.preventDefault();
-  //   if (e.target.className == 'task') {
-  //     e.target.style.opacity = '100%'
-  //   }
-  // }
-
-  // const dropHandler = (e: React.DragEvent<HTMLDivElement>) => {
-  //   e.preventDefault();
-  // }
 
   return (
     <Draggable draggableId={task._id} index={index}>
@@ -221,14 +242,24 @@ function Task({task, index}: TaskProps) {
         <div className="task__title">
           <div className="task__title-text">{task.name}</div>
           <div className="task__users">
-            <img src={icon} alt="" />
-            <img src={icon} alt="" />
+            {users.map(user => 
+              <UserImage 
+                callback={() => {
+                  setUsers([...users, user])
+                }} 
+                key={user._id} 
+                username={user.name} 
+                size='20px' 
+                fontSize='10px' 
+                className=''
+              />
+            )}
           </div>
         </div>
         
         <div className="task__description">
           {task.description &&<div className="task__description-text">{task.description}...</div>}
-          {task.deadline && <div className="task__deadline">{date.getDate()}.0{date.getMonth()}.{date.getFullYear()} </div>}
+          {task.deadline && <div className={getDeadlineDateClass()}>{transformDate(task.deadline)}</div>}
           
         </div>
       </div>

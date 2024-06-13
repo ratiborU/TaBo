@@ -1,10 +1,8 @@
 import { useState } from 'react';
-// import UserService from '../services/api/UserService.tsx';
 import { createDesk, getUserDesks } from '../services/api/DeskService.tsx';
 import Desk from '../components/Desk';
 import Button from '../components/UI/Button.tsx';
 import AddDeskForm from '../components/AddDeskForm.tsx';
-// import ModalChange from '../components/UI/ModalChange';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
 import { useAppSelector } from "../services/redux/hooks";
 import { selectUser } from "../services/redux/fiatures/userSlice";
@@ -14,7 +12,6 @@ function HomePage() {
   const [isAddingDesk, setIsAddingDesk] = useState(false);
   const queryClient = useQueryClient();
   const user = useAppSelector(selectUser);
-  // const dispatch = useAppDispatch();
 
   const { data: desks, isLoading, error } = useQuery({
     queryFn: async () => await getUserDesks(user._id),

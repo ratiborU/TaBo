@@ -76,3 +76,19 @@ export const updateTask = async (id: string, name: string, columnId: string, des
     console.log(response);
   return response;
 }
+
+
+export const deleteTask = async (id: string): Promise<ITask> => {
+  const response = await axios.delete(`http://localhost:5000/tasks/${id}`, {
+    headers: {
+      "Authorization": `Bearer ${window.localStorage.getItem("token")}`
+    }
+  })
+    .then((response) => {
+      return response["data"];
+    }).catch((error) => {
+      console.log(error);
+      throw new Error(error.message);
+    }); 
+  return response;
+}

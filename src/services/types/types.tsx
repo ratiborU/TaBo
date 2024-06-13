@@ -10,7 +10,7 @@ export type IUser = {
 export type IDesk = {
   _id: string,
   name: string,
-  users: string[],
+  users: IUser[],
   position: number
 }
 
@@ -26,7 +26,7 @@ export type ITask = {
   name: string,
   columnId: string,
   description: string,
-  users: string[],
+  users: IUser[],
   result: string,
   files: string[],
   deadline: string,
@@ -64,7 +64,7 @@ export type ITaskWithComments = {
   name: string,
   columnId: string,
   description: string,
-  users: string[],
+  users: IUser[],
   result: string,
   files: string[],
   deadline: string,

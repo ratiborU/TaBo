@@ -15,7 +15,7 @@ function DeskLayout() {
           <NavLink className="header__navlink" to={`/about`}>О доске</NavLink>
           <NavLink className="header__navlink" to={`/login/login`}>{user.name ? user.name: "Войти"}</NavLink>
           {/* <NavLink className="header__navlink" to={`/login/login`}><img src={icon} alt="" /></NavLink> */}
-          <UserImage username='ратибор' size='40px' fontSize='24px' className='header__navlink'/>
+          <UserImage username={user.name} size='40px' fontSize='24px' className='header__navlink'/>
         </nav>
       </header>
       <main className='main-desk'>

@@ -11,8 +11,8 @@ import ModalChange from './UI/ModalChange';
 import { createTask } from '../services/api/TaskSerice';
 
 import { Droppable } from 'react-beautiful-dnd';
-import { useAppSelector } from '../services/redux/hooks';
-import { selectDesk } from '../services/redux/fiatures/deskSlice';
+// import { useAppSelector } from '../services/redux/hooks';
+// import { selectDesk } from '../services/redux/fiatures/deskSlice';
 
 
 type ColumnProps = {
@@ -25,16 +25,20 @@ function Column({column}: ColumnProps) {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isChanging, setIsChanging] = useState(false);
   const [isDeleted, setIsDeleted] = useState(false);
+  const [inputTitle, setInputTitle] = useState(column.name)
   // const [tasks, setTasks] = useState(column.tasks.sort((a, b) => a.position - b.position));
   const queryClient = useQueryClient();
 
-  const deskRedux = useAppSelector(selectDesk);
+  // const deskRedux = useAppSelector(selectDesk);
   // console.log(deskRedux.columns);
   // console.log(column)
   const mutationUpdate = useMutation(
     async (updatedColumn: IColumn) => await updateColumn(updatedColumn),
     {
-      onSuccess: () => queryClient.invalidateQueries('desk')
+      onSuccess: () => {
+        queryClient.invalidateQueries('desk');
+        setIsChanging(false);
+      }
     }
   );
 
@@ -46,7 +50,7 @@ function Column({column}: ColumnProps) {
   );
   
   const mutationAddTask = useMutation(
-    async () => await createTask('task', column._id),
+    async (name: string) => await createTask(name, column._id),
     {
       onSuccess: () => queryClient.invalidateQueries('desk')
     }
@@ -69,11 +73,22 @@ function Column({column}: ColumnProps) {
     setIsDeleted(true);
   }
 
-  const handleAddTask = () => {
-    mutationAddTask.mutate();
+  const handleAddTask = (name: string) => {
+    mutationAddTask.mutate(name);
     setIsAddingTask(false)
   }
-  // console.log(column.tasks);
+
+  const onTitleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    mutationUpdate.mutate({...column, name: inputTitle});
+  }
+
+
+  if (isDeleted) {
+    return <></>
+  }
+
+
   return (
     <Droppable droppableId={column._id}>
     {(provided) => (
@@ -82,12 +97,18 @@ function Column({column}: ColumnProps) {
         ref={provided.innerRef}
       >
         <div className="column__title">
-          <div className="column__title-text">{column.name}</div>
+          {!isChanging && <div className="column__title-text">{column.name}</div>}
+          {isChanging && 
+            <form onSubmit={onTitleFormSubmit}>
+              <input className='column__title-input' type="text" value={inputTitle} onChange={(e) => setInputTitle(e.target.value)}/>
+            </form>
+            
+          }
           {/* <div className="column__title-more"><img src={moreIcon} alt="" /></div> */}
           <div className="column__title-more" onClick={handleModal}>
-              <img src={moreIcon} alt="#" />
-              {isModalVisible && <ModalChange callbackChange={() => setIsChanging(true)} callbackDelete={handleDeleteColumn}/>}
-            </div>
+            <img src={moreIcon} alt="#" />
+            {isModalVisible && <ModalChange callbackChange={() => setIsChanging(true)} callbackDelete={handleDeleteColumn}/>}
+          </div>
         </div>
         
         {/* че-то странное не факт что будет работать */}

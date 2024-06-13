@@ -1,7 +1,7 @@
-import React from 'react';
+// import React from 'react';
 import moreIcon from "../../assets/icons/More horiz.svg"
 
-function MoreIcon({callback}) {
+function MoreIcon() {
   return (
     <div className=''>
       <img src={moreIcon} alt="" />

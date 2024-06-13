@@ -1,11 +1,11 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { getUserStiles } from '../services/utils/utils';
 
 type UserImageProps = {
   username: string,
   size: string,
   fontSize: string,
-  className: string,
+  className?: string,
   callback?: () => void
 }
 
